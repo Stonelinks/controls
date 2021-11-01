@@ -5,8 +5,10 @@ import * as expressWs from "express-ws";
 import * as url from "url";
 import { SERVER_PORT, VIEWER_FOLDER } from "./common/constants";
 import { registerConfigRoutes } from "./routes/config";
-import { registerRobotvacRoutes } from "./routes/robovac";
+import { registerDbRoutes } from "./routes/db";
+import { registerRobovacRoutes } from "./routes/robovac";
 import { initConfig } from "./utils/config";
+import { initDb } from "./utils/db";
 import { connectToEcoVacs } from "./utils/robovac";
 
 const app = (express() as unknown) as expressWs.Application;
@@ -41,9 +43,11 @@ app.get("/update-apps", (req, res) => {
 (async () => {
   try {
     await initConfig();
+    await initDb();
     await connectToEcoVacs();
-    await registerRobotvacRoutes(app);
+    await registerRobovacRoutes(app);
     await registerConfigRoutes(app);
+    await registerDbRoutes(app);
   } catch (e) {
     console.error(e);
   } finally {

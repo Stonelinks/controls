@@ -12,7 +12,7 @@ const makeDefaultConfig = async (): Promise<Config> => {
 
 export const getConfig = async () => {
   while (!config) {
-    await timeout(MILLISECONDS_IN_SECOND * 0.5);
+    await timeout(MILLISECONDS_IN_SECOND);
   }
   return config;
 };

@@ -1,17 +1,52 @@
 import { Application } from "express-ws";
-import { MILLISECONDS_IN_SECOND, now, timeout } from "../common/time";
+import { MILLISECONDS_IN_SECOND, now } from "../common/time";
 import {
   AllWebSocketMsgs,
   ControlStartPayload,
   WebSocketMsgTypes,
 } from "../common/types";
-import { getVacbot } from "../utils/robovac";
+import {
+  doCharge,
+  doClean,
+  doStop,
+  moveForward,
+  moveLeft,
+  moveRight,
+  moveStop,
+  moveTurnAround,
+} from "../utils/robovac";
 
 const WS_PING_INTERVAL_MS = 5 * MILLISECONDS_IN_SECOND;
 
-export const registerRobotvacRoutes = async (app: Application) => {
-  app.ws("/controls", async (ws, req) => {
-    const vacbot = await getVacbot();
+export const registerRobovacRoutes = async (app: Application) => {
+  app.get("/robovac/clean", async (req, res) => {
+    await doClean();
+    res.send(
+      JSON.stringify({
+        done: true,
+      }),
+    );
+  });
+
+  app.get("/robovac/charge", async (req, res) => {
+    await doCharge();
+    res.send(
+      JSON.stringify({
+        done: true,
+      }),
+    );
+  });
+
+  app.get("/robovac/stop", async (req, res) => {
+    await doStop();
+    res.send(
+      JSON.stringify({
+        done: true,
+      }),
+    );
+  });
+
+  app.ws("/robovac/controls", async (ws, req) => {
     const log = (...args: any[]) => console.log(...args);
     const err = (...args: any[]) => console.error(...args);
     const send = (m: Buffer | AllWebSocketMsgs) => {
@@ -41,7 +76,7 @@ export const registerRobotvacRoutes = async (app: Application) => {
       clearInterval(pingInterval);
     });
 
-    ws.on("message", m => {
+    ws.on("message", async m => {
       log(`ws received ${m}`);
       try {
         const p = JSON.parse((m as unknown) as string);
@@ -53,16 +88,16 @@ export const registerRobotvacRoutes = async (app: Application) => {
             log(`start ${p.msg.direction}`);
             switch (p.msg.direction as ControlStartPayload["direction"]) {
               case "down":
-                vacbot.run("Move", "TurnAround");
+                await moveTurnAround();
                 break;
               case "up":
-                vacbot.run("Move", "forward");
+                await moveForward();
                 break;
               case "left":
-                vacbot.run("Move", "left");
+                await moveLeft();
                 break;
               case "right":
-                vacbot.run("Move", "right");
+                await moveRight();
                 break;
               default:
                 break;
@@ -70,7 +105,7 @@ export const registerRobotvacRoutes = async (app: Application) => {
             break;
           case WebSocketMsgTypes.controlStop:
             log(`stop ${p.msg.direction}`);
-            vacbot.run("Move", "stop");
+            await moveStop();
             break;
           default:
             break;

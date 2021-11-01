@@ -2,6 +2,26 @@ import { JsonObject } from "./json";
 
 export interface Config extends JsonObject {}
 
+export type CleanStatus =
+  | "auto"
+  | "edge"
+  | "spot"
+  | "spot_area"
+  | "single_room"
+  | "stop";
+
+export type ChargeMode = "returning" | "charging" | "idle";
+
+export interface RoboVacState extends JsonObject {
+  batteryPercent: number;
+  cleanStatus: CleanStatus;
+  chargeMode: ChargeMode;
+}
+
+export interface Db extends JsonObject {
+  robovac: RoboVacState;
+}
+
 export enum WebSocketMsgTypes {
   ping = "ping",
   pong = "pong",

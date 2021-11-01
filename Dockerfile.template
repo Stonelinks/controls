@@ -2,17 +2,17 @@ FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu-node:12-bionic-build as build
 
 WORKDIR /usr/src/app
 
+SHELL ["/bin/bash", "-c"]
+
 COPY . /usr/src/app/
 
 RUN install_packages jq
 RUN source .envrc && IS_DOCKER=true setup
-RUN source .envrc && PUBLIC_URL=/camserver yarn build
+RUN source .envrc && PUBLIC_URL=/robocontrols yarn build
 
 FROM balenalib/%%BALENA_MACHINE_NAME%%-ubuntu-node:12-bionic-run
 
 COPY --from=build /usr/src/app /usr/src/app
-# COPY --from=build /usr/lib /usr/lib
-# COPY --from=build /usr/local /usr/local
 
 ENV UDEV=on
 

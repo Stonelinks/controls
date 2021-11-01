@@ -1,7 +1,8 @@
 import React from "react";
-import { apiFetch } from "../utils/api";
+import { apiFetch, HTTP_BASE_URL } from "../utils/api";
 import { frontendPath, isLocalhost, reload } from "../utils/url";
 import ConfigEditor from "./ConfigEditor";
+import DbViewer from "./DbViewer";
 import NavItem from "./NavItem";
 import RobovacControl from "./RobovacControl";
 
@@ -49,16 +50,34 @@ const App = () => {
               <h1>Controls</h1>
             </div>
           </div>
-          <div>
+          {/* <div>
             <NavItem to={frontendPath("/")} title="Config" />
             <NavItem to={frontendPath("controls")} title="Controls" />
-          </div>
+          </div> */}
           <div>
             <MatchFirst>
-              <Match path={frontendPath("controls")}>
-                <RobovacControl />
-              </Match>
+              {/* <Match path={frontendPath("controls")}>
+              </Match> */}
               <Match path={frontendPath("/")}>
+                <RobovacControl />
+                <button
+                  onClick={() => window.fetch(`${HTTP_BASE_URL}/robovac/clean`)}
+                >
+                  Clean
+                </button>
+                <button
+                  onClick={() =>
+                    window.fetch(`${HTTP_BASE_URL}/robovac/charge`)
+                  }
+                >
+                  Charge
+                </button>
+                <button
+                  onClick={() => window.fetch(`${HTTP_BASE_URL}/robovac/stop`)}
+                >
+                  Stop
+                </button>
+                <DbViewer />
                 <ConfigEditor />
               </Match>
             </MatchFirst>

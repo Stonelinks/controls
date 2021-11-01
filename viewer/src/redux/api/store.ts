@@ -11,6 +11,7 @@ const makeRequestInitialState = (url: string): ApiRequest => ({
 
 const InitialAPIReducerState: ApiStoreState = {
   getConfig: makeRequestInitialState("config/get"),
+  getDb: makeRequestInitialState("db/get"),
   setConfigValue: makeRequestInitialState("config/:configKey/set/:configValue"),
 };
 

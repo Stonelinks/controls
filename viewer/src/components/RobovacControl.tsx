@@ -161,7 +161,7 @@ class RobovacControl extends React.Component<Props, State> {
   };
 
   getWsUrl = () => {
-    return `${WS_BASE_URL}/controls`;
+    return `${WS_BASE_URL}/robovac/controls`;
   };
 
   socket?: WebSocket;

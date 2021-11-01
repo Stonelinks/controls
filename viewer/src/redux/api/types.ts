@@ -12,6 +12,7 @@ export interface ApiRequest {
 
 export interface ApiStoreState {
   getConfig: ApiRequest;
+  getDb: ApiRequest;
   setConfigValue: ApiRequest;
 }
 
