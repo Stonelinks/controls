@@ -1,11 +1,17 @@
 import { Application } from "express-ws";
-import { MILLISECONDS_IN_SECOND, now } from "../common/time";
-import { AllWebSocketMsgs, WebSocketMsgTypes } from "../common/types";
+import { MILLISECONDS_IN_SECOND, now, timeout } from "../common/time";
+import {
+  AllWebSocketMsgs,
+  ControlStartPayload,
+  WebSocketMsgTypes,
+} from "../common/types";
+import { getVacbot } from "../utils/robovac";
 
 const WS_PING_INTERVAL_MS = 5 * MILLISECONDS_IN_SECOND;
 
-export const robotvacRoutes = async (app: Application) => {
+export const registerRobotvacRoutes = async (app: Application) => {
   app.ws("/controls", async (ws, req) => {
+    const vacbot = await getVacbot();
     const log = (...args: any[]) => console.log(...args);
     const err = (...args: any[]) => console.error(...args);
     const send = (m: Buffer | AllWebSocketMsgs) => {
@@ -45,9 +51,26 @@ export const robotvacRoutes = async (app: Application) => {
             break;
           case WebSocketMsgTypes.controlStart:
             log(`start ${p.msg.direction}`);
+            switch (p.msg.direction as ControlStartPayload["direction"]) {
+              case "down":
+                vacbot.run("Move", "TurnAround");
+                break;
+              case "up":
+                vacbot.run("Move", "forward");
+                break;
+              case "left":
+                vacbot.run("Move", "left");
+                break;
+              case "right":
+                vacbot.run("Move", "right");
+                break;
+              default:
+                break;
+            }
             break;
           case WebSocketMsgTypes.controlStop:
             log(`stop ${p.msg.direction}`);
+            vacbot.run("Move", "stop");
             break;
           default:
             break;
