@@ -13,6 +13,7 @@ export type CleanStatus =
   | "stop";
 
 export type ChargeMode = "returning" | "charging" | "idle";
+
 export interface RoboVacState extends JsonObject {
   batteryPercent: number;
   cleanStatus: CleanStatus;
