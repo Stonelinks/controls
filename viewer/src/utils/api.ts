@@ -1,6 +1,4 @@
-import { reload } from "./url";
 import { SERVER_PORT } from "../common/constants";
-import { MILLISECONDS_IN_SECOND } from "../common/time";
 import { encode } from "../common/encode";
 
 const isHttps = window.location.protocol.startsWith("https");
@@ -33,18 +31,4 @@ export const fillInUrlTemplate = (urlTemplate: string, urlOptions?: object) => {
     }
   }
   return finalUrl;
-};
-
-// Keep the app up-to-date
-export const initUpdateCheckInterval = async () => {
-  setInterval(async () => {
-    try {
-      const r = await apiFetch("update-apps");
-      if (r.shouldRestart) {
-        reload();
-      }
-    } catch (e) {
-      // pass
-    }
-  }, 5 * MILLISECONDS_IN_SECOND);
 };

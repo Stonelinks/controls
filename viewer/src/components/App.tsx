@@ -1,9 +1,8 @@
 import React from "react";
-import { apiFetch, HTTP_BASE_URL } from "../utils/api";
+import { apiFetch } from "../utils/api";
 import { frontendPath, isLocalhost, reload } from "../utils/url";
 import ConfigEditor from "./ConfigEditor";
 import DbViewer from "./DbViewer";
-import NavItem from "./NavItem";
 import RobovacControl from "./RobovacControl";
 
 // tslint:disable-next-line:no-var-requires
@@ -25,6 +24,7 @@ const App = () => {
       switch (connectivityState) {
         case CONNECTIVITY_STATE.unknown:
           try {
+            await apiFetch("robovac/connect");
             const ping = await apiFetch("ping");
             if (ping.pong === "pong") {
               setConnectivityState(CONNECTIVITY_STATE.connected);
@@ -60,23 +60,11 @@ const App = () => {
               </Match> */}
               <Match path={frontendPath("/")}>
                 <RobovacControl />
-                <button
-                  onClick={() => window.fetch(`${HTTP_BASE_URL}/robovac/clean`)}
-                >
-                  Clean
-                </button>
-                <button
-                  onClick={() =>
-                    window.fetch(`${HTTP_BASE_URL}/robovac/charge`)
-                  }
-                >
+                <button onClick={() => apiFetch("robovac/clean")}>Clean</button>
+                <button onClick={() => apiFetch("robovac/charge")}>
                   Charge
                 </button>
-                <button
-                  onClick={() => window.fetch(`${HTTP_BASE_URL}/robovac/stop`)}
-                >
-                  Stop
-                </button>
+                <button onClick={() => apiFetch("robovac/stop")}>Stop</button>
                 <DbViewer />
                 <ConfigEditor />
               </Match>

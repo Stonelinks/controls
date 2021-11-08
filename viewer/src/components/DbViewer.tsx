@@ -1,4 +1,3 @@
-import { now } from "moment";
 import React from "react";
 import { connect, ConnectedProps } from "react-redux";
 import { nothing } from "../common/nothing";

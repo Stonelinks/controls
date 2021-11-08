@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 import {
   ECOVACS_ACCOUNT_NAME,
   ECOVACS_ACCOUNT_PASSWORD,
@@ -22,11 +23,13 @@ const api = new EcoVacsAPI(deviceId, countryCode, continent);
 
 interface Vacbot {
   run: (...s: string[]) => void;
-  on: (s: string, cb: (v: any) => void) => void;
+  on: EventEmitter["on"];
   connect: () => void;
+  disconnect: () => void;
   clean: () => void;
   stop: () => void;
   charge: () => void;
+  ecovacs: EventEmitter;
 }
 
 let vacbot: Vacbot = null;
@@ -88,78 +91,92 @@ export const doCharge = async () => {
   v.charge();
 };
 
-export const connectToEcoVacs = async () =>
-  new Promise<void>((resolve, reject) => {
+export const connectToEcoVacs = async () => {
+  if (vacbot) {
+    vacbot.ecovacs.removeAllListeners();
+    vacbot.disconnect();
+    vacbot = null;
+  }
+
+  return new Promise<void>((resolve, reject) => {
     api
       .connect(ECOVACS_ACCOUNT_NAME, EcoVacsAPI.md5(ECOVACS_ACCOUNT_PASSWORD))
       .then(() => {
-        api.devices().then(devices => {
-          console.log("Devices:", JSON.stringify(devices));
+        api
+          .devices()
+          .then(devices => {
+            console.log("Devices:", JSON.stringify(devices));
 
-          const v = api.getVacBot(
-            api.uid,
-            EcoVacsAPI.REALM,
-            api.resource,
-            api.user_access_token,
-            devices[0],
-            continent,
-          );
+            const v = api.getVacBot(
+              api.uid,
+              EcoVacsAPI.REALM,
+              api.resource,
+              api.user_access_token,
+              devices[0],
+              continent,
+            );
 
-          let hasResolved = false;
+            let hasResolved = false;
 
-          let hasBatteryState = false;
-          let hasGetCleanState = false;
-          let hasGetChargeState = false;
+            let hasBatteryState = false;
+            let hasGetCleanState = false;
+            let hasGetChargeState = false;
 
-          const checkResolve = () => {
-            if (hasResolved) {
-              return;
-            }
-            if (hasBatteryState && hasGetCleanState && hasGetChargeState) {
-              hasResolved = true;
-              vacbot = v;
-              console.log("vacbot ready");
-              resolve();
-            }
-          };
+            const checkResolve = () => {
+              if (hasResolved) {
+                return;
+              }
+              if (hasBatteryState && hasGetCleanState && hasGetChargeState) {
+                hasResolved = true;
+                vacbot = v;
+                console.log("vacbot ready");
+                resolve();
+              }
+            };
 
-          v.on("ready", event => {
-            v.on("BatteryInfo", async (battery: number) => {
-              const vs = await getVacState();
-              vs.batteryPercent = Math.round(battery);
-              console.log("Battery level: " + vs.batteryPercent);
-              await setVacState(vs);
+            v.on("ready", event => {
+              v.on("BatteryInfo", async (battery: number) => {
+                const vs = await getVacState();
+                vs.batteryPercent = Math.round(battery);
+                console.log("Battery level: " + vs.batteryPercent);
+                await setVacState(vs);
 
-              hasBatteryState = true;
-              checkResolve();
+                hasBatteryState = true;
+                checkResolve();
+              });
+              v.on("CleanReport", async (value: CleanStatus) => {
+                const vs = await getVacState();
+                vs.cleanStatus = value;
+                console.log("Clean status: " + vs.cleanStatus);
+                await setVacState(vs);
+
+                hasGetCleanState = true;
+                checkResolve();
+              });
+              v.on("ChargeState", async (value: ChargeMode) => {
+                const vs = await getVacState();
+                vs.chargeMode = value;
+                console.log("Charge status: " + vs.chargeMode);
+                await setVacState(vs);
+
+                hasGetChargeState = true;
+                checkResolve();
+              });
+
+              v.run("GetBatteryState");
+              v.run("GetCleanState");
+              v.run("GetChargeState");
             });
-            v.on("CleanReport", async (value: CleanStatus) => {
-              const vs = await getVacState();
-              vs.cleanStatus = value;
-              console.log("Clean status: " + vs.cleanStatus);
-              await setVacState(vs);
-
-              hasGetCleanState = true;
-              checkResolve();
-            });
-            v.on("ChargeState", async (value: ChargeMode) => {
-              const vs = await getVacState();
-              vs.chargeMode = value;
-              console.log("Charge status: " + vs.chargeMode);
-              await setVacState(vs);
-
-              hasGetChargeState = true;
-              checkResolve();
-            });
-
-            v.run("GetBatteryState");
-            v.run("GetCleanState");
-            v.run("GetChargeState");
+            v.connect();
+          })
+          .catch(e => {
+            console.log("err", e);
+            reject(e);
           });
-          v.connect();
-        });
       })
       .catch(e => {
+        console.log("err", e);
         reject(e);
       });
   });
+};

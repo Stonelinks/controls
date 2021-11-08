@@ -6,6 +6,7 @@ import {
   WebSocketMsgTypes,
 } from "../common/types";
 import {
+  connectToEcoVacs,
   doCharge,
   doClean,
   doStop,
@@ -19,6 +20,15 @@ import {
 const WS_PING_INTERVAL_MS = 5 * MILLISECONDS_IN_SECOND;
 
 export const registerRobovacRoutes = async (app: Application) => {
+  app.get("/robovac/connect", async (req, res) => {
+    await connectToEcoVacs();
+    res.send(
+      JSON.stringify({
+        done: true,
+      }),
+    );
+  });
+
   app.get("/robovac/clean", async (req, res) => {
     await doClean();
     res.send(

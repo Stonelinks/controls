@@ -33,13 +33,6 @@ app.get("/ping", (req, res) => {
   res.send(JSON.stringify({ pong: "pong" }));
 });
 
-// Clients poll this, so when the server restarts it'll restart clients
-let shouldRestart = true;
-app.get("/update-apps", (req, res) => {
-  res.send(JSON.stringify({ shouldRestart }));
-  shouldRestart = false;
-});
-
 (async () => {
   try {
     await initConfig();
